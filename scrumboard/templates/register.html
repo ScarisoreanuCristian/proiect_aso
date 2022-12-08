@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Register</title>
+
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href={% static "css/style.css" %}>
+</head>
+<body class="main">
+{% include 'navbar.html' %}
+<div class="center">
+    <h1>Signup</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="txt_field">
+            <input type="text" id="username" name="username" required>
+            <span></span>
+            <label>Username</label>
+        </div>
+        <div class="txt_field">
+            <input type="email" id="email" name="email" required>
+            <span></span>
+            <label>Email</label>
+        </div>
+        <div class="txt_field">
+            <input type="password" id="password1" name="password1" required>
+            <span></span>
+            <label>Password</label>
+        </div>
+        <div class="txt_field">
+            <input type="password" id="password2" name="password2" required>
+            <span></span>
+            <label>Confirm Password</label>
+        </div>
+        <input type="submit" value="Signup">
+        <div class="signup_link">
+            Already have an account? <a href={% url 'login' %}>Login</a>
+        </div>
+        <div style="color: red">{{ form.errors }}</div>
+    </form>
+</div>
+</body>
+</html>

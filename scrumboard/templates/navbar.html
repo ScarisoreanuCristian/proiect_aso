@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+</head>
+<body/>
+<div class="topnav">
+    {% if request.user.is_authenticated %}
+        <img src={% static 'images/chatapp.png' %}>
+        <div>Chat App</div>
+        <a class="{% if request.path == '/scrumboard/' %} active {% endif %}" href={% url 'home' %}>Home</a>
+        <a class="{% if request.path == '/scrumboard/chat/' %} active {% endif %}" href="{% url 'chat' %}">Chat</a>
+        <a style="float: right" href={% url 'logout' %}>Logout</a>
+        <div style="float: right" class="hello-msg">Hello, {{ request.user.username }}</div>
+    {% else %}
+        <img src={% static 'images/chatapp.png' %}>
+        <div>Chat App</div>
+        <a class="{% if request.path == '/scrumboard/' %} active {% endif %}" href={% url 'home' %}>Home</a>
+        <a class="{% if request.path == '/scrumboard/login/' %} active {% endif %}" style="float: right" href={% url 'login' %}>Login</a>
+        <a class="{% if request.path == '/scrumboard/register/' %} active {% endif %}" style="float: right"
+
+           href={% url 'register' %}>Signup</a>
+    {% endif %}
+</div>
+
+</body>
+</html>

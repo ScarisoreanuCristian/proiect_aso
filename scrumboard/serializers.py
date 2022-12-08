@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from scrumboard.models import List, Card
+from scrumboard.models import List, Card, Message
 
 
 class CardSerializer(serializers.ModelSerializer):

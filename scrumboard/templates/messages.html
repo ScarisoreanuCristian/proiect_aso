@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>Chat</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+          integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css">
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'css/chat.css' %}">
+
+</head>
+<body class="main">
+{% include 'navbar.html' %}
+<div class="container-fluid h-100" style="width: 75%; margin-top: 25px">
+    <h2>Chatting with {{ userTo }}</h2>
+    <div class="card mb-sm-3 mb-md-0 contacts_card" style="max-height: 650px">
+        {% for messages in messages %}
+            {% if messages.to_user == userTo.id %}
+                <div class="d-flex mb-4 replied">
+                    <div class="msg_cotainer_send">
+                        {{ messages.value }}
+                        <span style="margin-top: 5px" class="msg_time_send">{{ messages.date | date:'H:i' }}</span>
+                    </div>
+                    <div class="img_cont_msg">
+                        <img src="{% static 'images/pngwing.com.png' %}"
+                             class="rounded-circle user_img_msg">
+                    </div>
+                </div>
+
+            {% else %}
+                <div class="d-flex mb-4 received">
+                    <div class="img_cont_msg">
+                        <img src="{% static 'images/pngwing.com.png' %}"
+                             class="rounded-circle user_img_msg">
+                    </div>
+                    <div class="msg_cotainer">
+                        {{ messages.value }}
+                        <span style="margin-top: 35px" class="msg_time">{{ messages.date | date:'H:i' }}</span>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <div style="align-items: center;width: 73%" class="card-footer">
+        <form id="send-message-form" method="POST">
+            {% csrf_token %}
+            <div class="input-group">
+                <div class="input-group-append">
+
+                    <span class="input-group-text attach_btn">
+                        <label style="margin-top: 5px" for="image" class="fas fa-paperclip"></label>
+                                        <input style="display:none;" type="file" id="image" name="image"
+                                               accept="image/*">
+                    </span>
+                </div>
+                <input type="text" name="message" id="message" class="form-control type_msg"
+                       placeholder="Type your message...">
+
+                <div class="input-group-append">
+                    <button class="btn btn-secondary" type="submit">
+                        <span class="input-group-text send_btn">
+                            <i class="fas fa-location-arrow"></i>
+                        </span>
+                    </button>
+
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let url = `ws://${window.location.host}/ws/socket-server/`
+    const chatSocket = new WebSocket(url)
+    let typingTimer
+    let doneTypingInterval = 300
+
+    const messagesCard = document.querySelector('.contacts_card')
+    messagesCard.scrollBy(0, messagesCard.scrollHeight)
+
+    chatSocket.onmessage = (e) => {
+        clearTimeout(typingTimer)
+        typingTimer = setTimeout(doneTyping, doneTypingInterval)
+        console.log(e)
+        let data = JSON.parse(e.data)
+        console.log('Data:', data);
+
+        if (data.type === 'chat') {
+            const messageData = JSON.parse(data.message)
+            console.log('Message: ', messageData)
+
+            const formattedDate = new Date(messageData.date).getHours() + ':' + new Date(messageData.date).getMinutes()
+            if (messageData.to_user === {{ userTo.id }}) {
+                messagesCard.insertAdjacentHTML('beforeend', `
+                <div class="d-flex mb-4 replied">
+                    <div class="msg_cotainer_send">
+                        ${messageData.value}
+                     <span style="margin-top: 5px" class="msg_time_send">${formattedDate}</span>
+                    </div>
+                    <div class="img_cont_msg">
+                        <img src="{% static 'images/pngwing.com.png' %}"
+                             class="rounded-circle user_img_msg">
+                    </div>
+                </div>`)
+            } else {
+                messagesCard.insertAdjacentHTML('beforeend', `
+                <div class="d-flex mb-4 received">
+                    <div class="img_cont_msg">
+                        <img src="{% static 'images/pngwing.com.png' %}"
+                             class="rounded-circle user_img_msg">
+                    </div>
+                    <div class="msg_cotainer">
+                        ${messageData.value}
+                        <span style="margin-top: 35px" class="msg_time">${formattedDate}</span>
+                    </div>
+                </div>`)
+            }
+            messagesCard.scrollBy(0, messagesCard.scrollHeight)
+        }
+
+        if (data.type === 'typing' && data.user !== {{ request.user.id }}) {
+            if (!document.querySelector('#typing')) {
+                messagesCard.insertAdjacentHTML('beforeend', `
+                <div id="typing" class="d-flex mb-4 received">
+                    <div class="img_cont_msg">
+                        <img src="{% static 'images/pngwing.com.png' %}"
+                             class="rounded-circle user_img_msg">
+                    </div>
+                    <div class="msg_cotainer">
+                        •••
+                        <span style="margin-top: 35px" class="msg_time"></span>
+                    </div>
+                </div>`)
+                messagesCard.scrollBy(0, messagesCard.scrollHeight)
+            }
+        }
+    }
+
+    let form = document.getElementById('send-message-form')
+    form.addEventListener('submit', (e) => {
+        e.preventDefault()
+        doneTyping()
+
+        let imageInput = document.getElementById('image')
+        let messages = e.target.message.value
+
+        chatSocket.send(JSON.stringify({
+            'message': messages,
+            'timestamp': new Date(),
+            'to_user': {{ userTo.id }},
+            'from_user': {{ request.user.id }},
+        }))
+        form.reset()
+    })
+
+    let input = document.getElementById('message')
+    input.addEventListener('keypress', e => {
+        if(e.keyCode !== 13) {
+            chatSocket.send(JSON.stringify({
+                'type': 'typing',
+                'user': {{ request.user.id }}
+            }))
+        }
+    })
+
+    const doneTyping = () => {
+        const typingCard = document.querySelector('#typing')
+        if (typingCard)
+            typingCard.remove()
+    }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+</head>
+<body class="main">
+{% include 'navbar.html' %}
+<div style="padding-left:16px;color:white">
+    {% if request.user.is_authenticated %}
+
+        <h2>Welcome!</h2>
+        <a href={% url 'chat' %}>Start Chatting</a>
+    {% else %}
+        <h2>Welcome!</h2>
+        <p>Chat App. Please login to start chatting</p>
+    {% endif %}
+</div>
+
+</body>
+</html>
