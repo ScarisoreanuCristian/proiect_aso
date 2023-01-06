@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'daphne'
 ]
 
-ASGI_APPLICATION = 'project.asgi.application'
+ASGI_APPLICATION = 'project.routing.application'
 
 CHANNEL_LAYERS = {
     'default': {
