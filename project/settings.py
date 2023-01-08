@@ -27,8 +27,9 @@ DEBUG = int(config("DEBUG", default=0))
 # 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
 # For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
 ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS").split(" ")
-CSRF_TRUSTED_ORIGINS = ['http://localhost:1337']
-CORS_ALLOWED_HOSTS = ['http://localhost:1337']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:1337', 'https://localhost']
+CORS_ALLOWED_HOSTS = ['http://localhost:1337', 'https://localhost']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
