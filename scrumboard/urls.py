@@ -25,6 +25,7 @@ urlpatterns = [
     path('', views.home, name="home"),
     path('chat/', views.usersView, name="chat"),
     path("chat/<int:user_id>", views.userChat, name="userChat"),
+    path("message/<int:user_id>", views.message, name="message")
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += router.urls

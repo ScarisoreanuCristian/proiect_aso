@@ -1,4 +1,7 @@
+import json
+
 from django.contrib.auth.models import AnonymousUser, User
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from .forms import CreateUserForm
@@ -113,3 +116,40 @@ def email(from_user_id, chat, to_user_id):
     recipient_list = [to_user.email]
     if not to_user.is_active:
         send_mail(subject, message, email_from, recipient_list)
+
+
+def message(request, user_id):
+    global message_object, jsonObject
+    if request.method == 'POST':
+
+        data = json.loads(request.body)
+
+        if 'type' in data:
+            print('typing')
+
+            jsonObject = json.dumps({
+                'type': 'typing',
+                'user': data['fromUser']
+            })
+        else:
+            message = data['message']
+            timestamp = data['timestamp']
+            to_user = data['toUser']
+            from_user = data['fromUser']
+
+            if message != '':
+                message_object = Message.objects.create(
+                    value=message, date=timestamp, to_user=to_user, from_user=from_user
+                )
+
+            email(from_user, message, to_user)
+
+            jsonObject = json.dumps({
+                'type': 'chat',
+                'message': message,
+                'timestamp' : timestamp,
+                'to_user' : to_user,
+                'from_user' : from_user,
+            })
+
+    return JsonResponse(jsonObject, safe=False)

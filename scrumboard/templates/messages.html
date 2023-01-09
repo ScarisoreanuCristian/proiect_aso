@@ -77,13 +77,29 @@
 </div>
 
 <script type="text/javascript">
-    let url = `ws://${window.location.host}/ws/socket-server/`
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let url = `ws://${window.location.host}/ws/`
     const chatSocket = new WebSocket(url)
     let typingTimer
-    let doneTypingInterval = 300
+    let doneTypingInterval = 50000
 
-    const messagesCard = document.querySelector('.contacts_card')
+    let messagesCard = document.querySelector('.contacts_card')
     messagesCard.scrollBy(0, messagesCard.scrollHeight)
+
+    setInterval(function () {
+        $.ajax({
+            type: 'GET',
+            url: `https://${window.location.host}/scrumboard/chat/{{ userTo.id }}`,
+            success: function (response) {
+                let htmlObject = document.createElement('div');
+                htmlObject.innerHTML = response
+                const newMessageCard = htmlObject.querySelector('.contacts_card')
+
+                messagesCard.innerHTML = newMessageCard.innerHTML
+                messagesCard.scrollBy(0, messagesCard.scrollHeight)
+            }
+        })
+    }, 1000)
 
     chatSocket.onmessage = (e) => {
         clearTimeout(typingTimer)
@@ -148,25 +164,84 @@
         e.preventDefault()
         doneTyping()
 
-        let imageInput = document.getElementById('image')
         let messages = e.target.message.value
 
-        chatSocket.send(JSON.stringify({
-            'message': messages,
-            'timestamp': new Date(),
-            'to_user': {{ userTo.id }},
-            'from_user': {{ request.user.id }},
-        }))
+        const json = JSON.stringify({
+            message: messages,
+            timestamp: new Date(),
+            toUser: {{ userTo.id }},
+            fromUser: {{ request.user.id }}
+        })
+
+        const formattedDate = new Date().getHours() + ':' + new Date().getMinutes()
+
+        messagesCard.insertAdjacentHTML('beforeend', `
+                <div class="d-flex mb-4 replied">
+                    <div class="msg_cotainer_send">
+                        ${messages}
+                     <span style="margin-top: 5px" class="msg_time_send">${formattedDate}</span>
+                    </div>
+                    <div class="img_cont_msg">
+                        <img src="{% static 'images/pngwing.com.png' %}"
+                             class="rounded-circle user_img_msg">
+                    </div>
+                </div>`)
+
+        messagesCard.scrollBy(0, messagesCard.scrollHeight)
+
+        $.ajax({
+            type: 'POST',
+            url: `https://${window.location.host}/scrumboard/message/{{ userTo.id }}`,
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            data: json,
+            success: (response) => {
+                console.log('Simple message sent: ' + response)
+            }
+        });
+
+
+        {% comment %}
+        // Failed to make the webosckets work in production
+                chatSocket.send(JSON.stringify({
+                    'message': messages,
+                    'timestamp': new Date(),
+                    'to_user': {{ userTo.id }},
+                    'from_user': {{ request.user.id }},
+                }))
+        {% endcomment %}
+
         form.reset()
     })
 
     let input = document.getElementById('message')
     input.addEventListener('keypress', e => {
-        if(e.keyCode !== 13) {
-            chatSocket.send(JSON.stringify({
-                'type': 'typing',
-                'user': {{ request.user.id }}
-            }))
+        if (e.keyCode !== 13) {
+
+            const json = JSON.stringify({
+                type: 'typing',
+                fromUser: {{ request.user.id }}
+            })
+
+            $.ajax({
+                type: 'POST',
+                url: `https://${window.location.host}/scrumboard/message/{{ userTo.id }}`,
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                data: json,
+                success: (response) => {
+                    console.log('Typing message sent')
+                }
+            });
+
+            {% comment %}
+                chatSocket.send(JSON.stringify({
+                    'type': 'typing',
+                    'user': {{ request.user.id }}
+                }))
+            {% endcomment %}
         }
     })
 
